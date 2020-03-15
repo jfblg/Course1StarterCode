@@ -7,6 +7,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 //Processing library
+import de.fhpotsdam.unfolding.data.Feature;
+import de.fhpotsdam.unfolding.geo.Location;
+import de.fhpotsdam.unfolding.marker.SimpleLinesMarker;
 import processing.core.PApplet;
 
 //Unfolding libraries
@@ -20,12 +23,13 @@ import de.fhpotsdam.unfolding.utils.MapUtils;
 
 //Parsing library
 import parsing.ParseFeed;
+import sun.java2d.pipe.SpanShapeRenderer;
 
 /** EarthquakeCityMap
  * An application with an interactive map displaying earthquake data.
  * Author: UC San Diego Intermediate Software Development MOOC team
- * @author Your name here
- * Date: July 17, 2015
+ * @author Frantisek Janus
+ * Date: March 15, 2020
  * */
 public class EarthquakeCityMap extends PApplet {
 
@@ -72,11 +76,40 @@ public class EarthquakeCityMap extends PApplet {
 	    //Use provided parser to collect properties for each earthquake
 	    //PointFeatures have a getLocation method
 	    List<PointFeature> earthquakes = ParseFeed.parseEarthquake(this, earthquakesURL);
+
+	    for(PointFeature pf : earthquakes) {
+	    	markers.add(new SimplePointMarker(pf.getLocation(), pf.getProperties()));
+		}
+
+	    int yellow = color(255,255,0);
+	    int gray = color(150,150,150);
+
+	    for (Marker mk : markers) {
+	    	if ( (int) mk.getProperty("year") > 2000) {
+				mk.setColor(yellow);
+			} else {
+	    		mk.setColor(gray);
+			}
+		}
+
+	    map.addMarkers(markers);
+
+	    // TODO: read ParseFeed class
 	    
 	    //TODO (Step 3): Add a loop here that calls createMarker (see below) 
 	    // to create a new SimplePointMarker for each PointFeature in 
 	    // earthquakes.  Then add each new SimplePointMarker to the 
 	    // List markers (so that it will be added to the map in the line below)
+		Location valLoc = new Location(-35.4f, -73.03f);
+		Feature valEq = new PointFeature(valLoc);
+		valEq.addProperty("title", "Valdivia, Chile");
+		valEq.addProperty("magnitude", "9.5");
+		valEq.addProperty("date", "May 22, 1960");
+		valEq.addProperty("year", "1960");
+
+//		Marker val = new SimplePointMarker(valLoc);
+		Marker valMk = new SimplePointMarker(valLoc, valEq.getProperties());
+		map.addMarker(valMk);
 	    
 	    
 	    // Add the markers to the map so that they are displayed

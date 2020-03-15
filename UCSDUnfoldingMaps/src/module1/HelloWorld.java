@@ -1,5 +1,6 @@
 package module1;
 
+import de.fhpotsdam.unfolding.providers.Microsoft;
 import processing.core.PApplet;
 import de.fhpotsdam.unfolding.UnfoldingMap;
 import de.fhpotsdam.unfolding.geo.Location;
@@ -11,8 +12,8 @@ import de.fhpotsdam.unfolding.utils.MapUtils;
 /** HelloWorld
   * An application with two maps side-by-side zoomed in on different locations.
   * Author: UC San Diego Coursera Intermediate Programming team
-  * @author Your name here
-  * Date: July 17, 2015
+  * @author Frantisek Janus
+  * Date: March 11, 2020
   * */
 public class HelloWorld extends PApplet
 {
@@ -25,7 +26,7 @@ public class HelloWorld extends PApplet
 
 	/** This is where to find the local tiles, for working without an Internet connection */
 	public static String mbTilesString = "blankLight-1-3.mbtiles";
-	
+
 	// IF YOU ARE WORKING OFFLINE: Change the value of this variable to true
 	private static final boolean offline = false;
 	
@@ -46,7 +47,8 @@ public class HelloWorld extends PApplet
 		this.background(200, 200, 200);
 		
 		// Select a map provider
-		AbstractMapProvider provider = new Google.GoogleTerrainProvider();
+//		AbstractMapProvider provider = new Google.GoogleTerrainProvider();
+		AbstractMapProvider provider = new Microsoft.RoadProvider();
 		// Set a zoom level
 		int zoomLevel = 10;
 		
@@ -72,9 +74,14 @@ public class HelloWorld extends PApplet
 	    map1.zoomAndPanTo(zoomLevel, new Location(32.9f, -117.2f));
 		
 		// This line makes the map interactive
-		MapUtils.createDefaultEventDispatcher(this, map1);
+//		MapUtils.createDefaultEventDispatcher(this, map1);
 		
-		// TODO: Add code here that creates map2 
+		// TODO: Add code here that creates map2
+		map2 = new UnfoldingMap(this, 420, 50, 350, 500, provider);
+		map2.zoomAndPanTo(zoomLevel, new Location(47.37f, 8.46f));
+//		MapUtils.createDefaultEventDispatcher(this, map2);
+
+
 		// Then you'll modify draw() below
 
 	}
@@ -84,6 +91,7 @@ public class HelloWorld extends PApplet
 		// So far we only draw map1...
 		// TODO: Add code so that both maps are displayed
 		map1.draw();
+		map2.draw();
 	}
 
 	

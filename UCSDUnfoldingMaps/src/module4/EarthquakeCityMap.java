@@ -1,7 +1,9 @@
 package module4;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import de.fhpotsdam.unfolding.UnfoldingMap;
 import de.fhpotsdam.unfolding.data.Feature;
@@ -11,17 +13,20 @@ import de.fhpotsdam.unfolding.geo.Location;
 import de.fhpotsdam.unfolding.marker.AbstractShapeMarker;
 import de.fhpotsdam.unfolding.marker.Marker;
 import de.fhpotsdam.unfolding.marker.MultiMarker;
+import de.fhpotsdam.unfolding.providers.AbstractMapProvider;
 import de.fhpotsdam.unfolding.providers.Google;
 import de.fhpotsdam.unfolding.providers.MBTilesMapProvider;
+import de.fhpotsdam.unfolding.providers.Microsoft;
 import de.fhpotsdam.unfolding.utils.MapUtils;
 import parsing.ParseFeed;
 import processing.core.PApplet;
+import processing.core.PGraphics;
 
 /** EarthquakeCityMap
  * An application with an interactive map displaying earthquake data.
  * Author: UC San Diego Intermediate Software Development MOOC team
- * @author Your name here
- * Date: July 17, 2015
+ * @author Frantisek Janus
+ * Date: March 17, 2020
  * */
 public class EarthquakeCityMap extends PApplet {
 	
@@ -39,7 +44,8 @@ public class EarthquakeCityMap extends PApplet {
 	
 	/** This is where to find the local tiles, for working without an Internet connection */
 	public static String mbTilesString = "blankLight-1-3.mbtiles";
-	
+
+	AbstractMapProvider provider;
 	
 
 	//feed with magnitude 2.5+ Earthquakes
@@ -62,13 +68,16 @@ public class EarthquakeCityMap extends PApplet {
 	
 	public void setup() {		
 		// (1) Initializing canvas and map tiles
+//		provider =  new Google.GoogleMapProvider();
+		provider =  new Microsoft.RoadProvider();
+
 		size(900, 700, OPENGL);
 		if (offline) {
 		    map = new UnfoldingMap(this, 200, 50, 650, 600, new MBTilesMapProvider(mbTilesString));
 		    earthquakesURL = "2.5_week.atom";  // The same feed, but saved August 7, 2015
 		}
 		else {
-			map = new UnfoldingMap(this, 200, 50, 650, 600, new Google.GoogleMapProvider());
+			map = new UnfoldingMap(this, 200, 50, 650, 600, provider);
 			// IF YOU WANT TO TEST WITH A LOCAL FILE, uncomment the next line
 		    //earthquakesURL = "2.5_week.atom";
 		}
@@ -76,11 +85,11 @@ public class EarthquakeCityMap extends PApplet {
 		
 		// FOR TESTING: Set earthquakesURL to be one of the testing files by uncommenting
 		// one of the lines below.  This will work whether you are online or offline
-		//earthquakesURL = "test1.atom";
-		//earthquakesURL = "test2.atom";
+//		earthquakesURL = "test1.atom";
+//		earthquakesURL = "test2.atom";
 		
 		// WHEN TAKING THIS QUIZ: Uncomment the next line
-		//earthquakesURL = "quiz1.atom";
+		earthquakesURL = "quiz1.atom";
 		
 		
 		// (2) Reading in earthquake data and geometric properties
@@ -140,18 +149,29 @@ public class EarthquakeCityMap extends PApplet {
 		textAlign(LEFT, CENTER);
 		textSize(12);
 		text("Earthquake Key", 50, 75);
-		
-		fill(color(255, 0, 0));
-		ellipse(50, 125, 15, 15);
+
 		fill(color(255, 255, 0));
-		ellipse(50, 175, 10, 10);
+		ellipse(50, 205, 10, 10);
 		fill(color(0, 0, 255));
-		ellipse(50, 225, 5, 5);
+		ellipse(50, 225, 10, 10);
+		fill(color(255, 0, 0));
+		ellipse(50, 245, 10, 10);
+		noFill();
+//		ellipse(50, 265, 10, 10);
+		drawX(50,265,5);
 		
 		fill(0, 0, 0);
-		text("5.0+ Magnitude", 75, 125);
-		text("4.0+ Magnitude", 75, 175);
-		text("Below 4.0", 75, 225);
+		text("City Marker", 75, 125);
+		text("Land Quake", 75, 145);
+		text("Ocean Quake", 75, 165);
+
+		text("Size ~ Magnitude", 75, 185); // TODO
+
+		text("Shallow", 75, 205);
+		text("Intermediate", 75, 225);
+		text("Deep", 75, 245);
+		text("Past hour", 75, 265);
+
 	}
 
 	
@@ -170,7 +190,9 @@ public class EarthquakeCityMap extends PApplet {
 		// If isInCountry ever returns true, isLand should return true.
 		for (Marker m : countryMarkers) {
 			// TODO: Finish this method using the helper method isInCountry
-			
+			if (isInCountry(earthquake, m)) {
+				return true;
+			}
 		}
 		
 		
@@ -197,7 +219,43 @@ public class EarthquakeCityMap extends PApplet {
 		//     	and (2) if it is on land, that its country property matches 
 		//      the name property of the country marker.   If so, increment
 		//      the country's counter.
-		
+		Map<String, Integer> counter = new HashMap<String, Integer>();
+		int oceanCount = 0;
+
+//		for (Marker cm : countryMarkers) {
+//			String name = (String)cm.getProperty("Depth");
+//			System.out.println(name);;
+//		}
+
+		for (Marker m : quakeMarkers) {
+			System.out.println(m.getProperties());
+			if (m instanceof EarthquakeMarker) {
+				EarthquakeMarker em = (EarthquakeMarker) m;
+				if (em.isOnLand()) {
+					LandQuakeMarker lqm = (LandQuakeMarker) em;
+					String country = lqm.getCountry();
+
+					if (counter.containsKey(country)) {
+						int c = counter.get(country);
+						counter.put(country, c += 1);
+					} else {
+						counter.put(country, 1);
+					}
+
+				} else {
+					if (em instanceof OceanQuakeMarker) {
+						oceanCount++;
+					}
+				}
+			}
+		}
+
+		for (String country : counter.keySet()) {
+			System.out.println( country + ": " + counter.get(country));;
+		}
+		System.out.println("----------");
+		System.out.println("OCEAN QUAKES: " + oceanCount);
+
 		// Here is some code you will find useful:
 		// 
 		//  * To get the name of a country from a country marker in variable cm, use:
@@ -249,5 +307,12 @@ public class EarthquakeCityMap extends PApplet {
 		}
 		return false;
 	}
+
+	private void drawX(float x, float y, int scale) {
+		strokeWeight(3);
+		line(x-scale, y+scale, x+scale, y-scale);
+		line(x-scale, y-scale, x+scale, y+scale);
+	}
+
 
 }

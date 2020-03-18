@@ -30,6 +30,8 @@ public class OceanQuakeMarker extends EarthquakeMarker {
 		// and how it is set in the EarthquakeMarker constructor
 		
 		// TODO: Implement this method
+		float scale = 30;
+		pg.rect(x-scale/2, y-scale/2, scale, scale);
 		
 	}
 	

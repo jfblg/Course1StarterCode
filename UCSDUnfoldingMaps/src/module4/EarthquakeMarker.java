@@ -37,6 +37,11 @@ public abstract class EarthquakeMarker extends SimplePointMarker
 	public static final float THRESHOLD_DEEP = 300;
 
 	// ADD constants for colors
+	public static int YELLOW;
+	public static int BLUE;
+	public static int RED;
+
+	public static int XSCALE = 10;
 
 	
 	// abstract method implemented in derived classes
@@ -67,8 +72,11 @@ public abstract class EarthquakeMarker extends SimplePointMarker
 		// call abstract method implemented in child class to draw marker shape
 		drawEarthquake(pg, x, y);
 		
-		// OPTIONAL TODO: draw X over marker if within past day		
-		
+		// OPTIONAL TODO: draw X over marker if within past day
+		if (this.getProperty("age").equals("Past Day")) {
+			drawX(pg, x, y, XSCALE);
+		}
+
 		// reset to previous styling
 		pg.popStyle();
 		
@@ -81,6 +89,19 @@ public abstract class EarthquakeMarker extends SimplePointMarker
 	// You might find the getters below helpful.
 	private void colorDetermine(PGraphics pg) {
 		//TODO: Implement this method
+		int yellow = pg.color(255, 255, 0); // deep
+		int blue = pg.color(0,0,255); // medium
+		int red = pg.color(255,0,0); // shallow
+
+		float depth = this.getDepth();
+
+		if (depth >= 0 && depth <= THRESHOLD_INTERMEDIATE) {
+			pg.fill(yellow);
+		} else if (depth >= THRESHOLD_INTERMEDIATE && depth <= THRESHOLD_DEEP) {
+			pg.fill(blue);
+		} else if (depth > THRESHOLD_DEEP && depth <= 700) {
+			pg.fill(red);
+		}
 	}
 	
 	
@@ -109,6 +130,11 @@ public abstract class EarthquakeMarker extends SimplePointMarker
 	{
 		return isOnLand;
 	}
-	
+
+	private void drawX(PGraphics pg, float x, float y, int scale) {
+		pg.strokeWeight(3);
+		pg.line(x-scale, y+scale, x+scale, y-scale);
+		pg.line(x-scale, y-scale, x+scale, y+scale);
+	}
 	
 }

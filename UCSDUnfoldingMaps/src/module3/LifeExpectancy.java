@@ -52,7 +52,7 @@ public class LifeExpectancy extends PApplet {
                     lifeExpMap.put(columns[4], value);
                 }
             } catch (NumberFormatException e) {
-                System.out.println("Not a float: " + columns[5]);
+                //System.out.println("Not a float: " + columns[5]);
             }
         }
         return lifeExpMap;

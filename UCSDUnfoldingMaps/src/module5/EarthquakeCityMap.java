@@ -65,6 +65,9 @@ public class EarthquakeCityMap extends PApplet {
 	// NEW IN MODULE 5
 	private CommonMarker lastSelected;
 	private CommonMarker lastClicked;
+	private CommonMarker lastLastClicked;
+
+	private boolean hidden;
 	
 	public void setup() {
 		//provider =  new Google.GoogleMapProvider();
@@ -127,6 +130,9 @@ public class EarthquakeCityMap extends PApplet {
 		background(0);
 		map.draw();
 		addKey();
+
+		if (lastClicked != null)
+			System.out.println(lastClicked.getLocation().toString());
 		
 	}
 	
@@ -176,8 +182,90 @@ public class EarthquakeCityMap extends PApplet {
 		// TODO: Implement this method
 		// Hint: You probably want a helper method or two to keep this code
 		// from getting too long/disorganized
+		lastLastClicked = lastClicked;
+
+		setLastClickedMarker();
+
+		if (wasSameLocationClickedTwice()) {
+			unhideMarkers();
+			lastClicked = null;
+		} else if (lastClicked != null) {
+			hideMarkers();
+			unhideMarkerByLocation(lastClicked.getLocation());
+			hidden = true;
+		} else {
+			unhideMarkers();
+		}
+
 	}
-	
+
+	private boolean wasSameLocationClickedTwice() {
+		if (lastClicked != null && lastLastClicked != null) {
+			if (lastLastClicked.getLocation() == lastClicked.getLocation()) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private void setLastClickedMarker() {
+		boolean cityClicked = false;
+
+		for (Marker m : cityMarkers) {
+			if (m.isInside(map, mouseX, mouseY)){
+				lastClicked = (CommonMarker)m;
+				cityClicked = true;
+				break;
+			} else {
+				lastClicked = null;
+			}
+		}
+
+		for (Marker m : quakeMarkers) {
+			if (m.isInside(map, mouseX, mouseY)){
+				lastClicked = (CommonMarker)m;
+				break;
+			} else {
+				if (! cityClicked)
+					lastClicked = null;
+			}
+		}
+	}
+
+	private void hideMarkerByLocation(Location location) {
+		for(Marker marker : quakeMarkers) {
+			if (marker.getLocation() == location)
+				marker.setHidden(true);
+		}
+
+		for(Marker marker : cityMarkers) {
+			if (marker.getLocation() == location)
+				marker.setHidden(true);
+		}
+	}
+
+	private void unhideMarkerByLocation(Location location) {
+		for(Marker marker : quakeMarkers) {
+			if (marker.getLocation() == location)
+				marker.setHidden(false);
+		}
+
+		for(Marker marker : cityMarkers) {
+			if (marker.getLocation() == location)
+				marker.setHidden(false);
+		}
+	}
+
+	// loop over and hide all markers
+	private void hideMarkers() {
+		for(Marker marker : quakeMarkers) {
+			marker.setHidden(true);
+		}
+
+		for(Marker marker : cityMarkers) {
+			marker.setHidden(true);
+		}
+	}
 	
 	// loop over and unhide all markers
 	private void unhideMarkers() {

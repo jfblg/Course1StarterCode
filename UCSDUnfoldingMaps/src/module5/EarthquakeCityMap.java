@@ -1,6 +1,7 @@
 package module5;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import de.fhpotsdam.unfolding.UnfoldingMap;
@@ -15,6 +16,7 @@ import de.fhpotsdam.unfolding.providers.AbstractMapProvider;
 import de.fhpotsdam.unfolding.providers.Google;
 import de.fhpotsdam.unfolding.providers.MBTilesMapProvider;
 import de.fhpotsdam.unfolding.providers.Microsoft;
+import de.fhpotsdam.unfolding.utils.GeoUtils;
 import de.fhpotsdam.unfolding.utils.MapUtils;
 import parsing.ParseFeed;
 import processing.core.PApplet;
@@ -96,7 +98,7 @@ public class EarthquakeCityMap extends PApplet {
 		List<Feature> cities = GeoJSONReader.loadData(this, cityFile);
 		cityMarkers = new ArrayList<Marker>();
 		for(Feature city : cities) {
-		  cityMarkers.add(new CityMarker(city));
+			cityMarkers.add(new CityMarker(city));
 		}
 	    
 		//     STEP 3: read in earthquake RSS feed
@@ -113,6 +115,22 @@ public class EarthquakeCityMap extends PApplet {
 		    quakeMarkers.add(new OceanQuakeMarker(feature));
 		  }
 	    }
+
+	    // Helper: compute which cities are in thread circle of an earthquake
+	    for (Marker e : quakeMarkers) {
+			HashMap<String, CityMarker> inThread = new HashMap<>();
+			EarthquakeMarker earthquakeMarker = (EarthquakeMarker)e;
+	    	double threadCircle = earthquakeMarker.threatCircle();
+	    	for (Marker c: cityMarkers) {
+	    		double dist = GeoUtils.getDistance(e.getLocation(), c.getLocation());
+	    		if(dist <= threadCircle) {
+					System.out.println(c.getStringProperty("name") + " in thread circle of " + earthquakeMarker.getTitle());;
+					inThread.put(c.getStringProperty("name"), (CityMarker) c);
+				}
+
+			}
+	    	e.setProperty("inThread", inThread);
+		}
 
 	    // could be used for debugging
 	    printQuakes();
@@ -186,14 +204,27 @@ public class EarthquakeCityMap extends PApplet {
 
 		setLastClickedMarker();
 
-		if (wasSameLocationClickedTwice()) {
+		if (wasSameLocationClickedTwice()) { // same marker selected for the 2nd time => show all
 			unhideMarkers();
 			lastClicked = null;
-		} else if (lastClicked != null) {
+		} else if (lastClicked != null) { // a marker was selected
 			hideMarkers();
-			unhideMarkerByLocation(lastClicked.getLocation());
+			unhideMarkerByLocation(lastClicked.getLocation()); // show only selected marker
+
+			// show all cities which are in thread of a an earthQuake
+			if (lastClicked instanceof EarthquakeMarker) {
+				Object inThread = lastClicked.getProperty("inThread");
+				HashMap<String, CityMarker> it = (HashMap<String, CityMarker>) inThread;
+				for (String city : it.keySet()) {
+					System.out.println(city + " is thread!");
+					it.get(city).setHidden(false);
+				}
+			}
+
+			// TODO: when clicked on city, show all earthquakes which threatens them
+
 			hidden = true;
-		} else {
+		} else { // when clicked not on any marker => show all
 			unhideMarkers();
 		}
 

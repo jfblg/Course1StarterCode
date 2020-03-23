@@ -96,8 +96,24 @@ public abstract class EarthquakeMarker extends CommonMarker
 		// TODO: Implement this method
 //		String mag = this.getProperties().toString();
 		Float mag = (Float)this.getProperty("magnitude");
+
+//		double distanceFromCity = parseKmFromCity(this.getStringProperty("title")); // -1 if not found
+//		String cityNameInTitle = parseCityName(this.getStringProperty("title")); // null if not found
+//		if (cityNameInTitle != null) {
+//			System.out.println(cityNameInTitle + " " + distanceFromCity);
+//		}
+
+		double threadCircle = this.threatCircle();
+		String output = mag + String.format(" TH: %.2f", threadCircle);
+
+		pg.stroke(153);
+		pg.fill(204, 102, 0);
+		pg.rect(x+10, y+5, 105, -20);
+
 		pg.fill(0, 0, 0);
-		pg.text(mag, x + 10, y);
+		pg.text(output, x + 10, y);
+
+		pg.stroke(0,0,0);
 	}
 
 	/**
@@ -127,6 +143,35 @@ public abstract class EarthquakeMarker extends CommonMarker
 		else {
 			pg.fill(255, 0, 0);
 		}
+	}
+
+	/**
+	 * HELPER METHOD
+	 * - check if title contains "km"
+	 * - parse km and return it as a double
+	 * - check if title contains "of" - parse city name afterwards
+	 * - check if title contains "," - if yes, parse state afterwards
+	 */
+
+	private String parseCityName(String title) {
+		int indexOfOf = title.indexOf("of");
+		if(indexOfOf != -1) {
+			String cityAndMaybeCountry = title.substring(indexOfOf+3);
+			int indexOfComma = cityAndMaybeCountry.indexOf(",");
+			if (indexOfComma != -1 )
+				return cityAndMaybeCountry.substring(0, indexOfComma);
+			else return cityAndMaybeCountry;
+		}
+		return null;
+	}
+
+	private double parseKmFromCity(String title) {
+		int indexOfKm = title.indexOf("km");
+		if(indexOfKm != -1) {
+			String kmString = title.split(" ")[3];
+			return Double.valueOf(kmString.substring(0, kmString.indexOf("km")));
+		}
+		return -1;
 	}
 	
 	
